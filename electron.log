@@ -1,1 +1,7 @@
 
+Error occurred in handler for 'save-note': Error: No handler registered for 'save-note'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:116772)
+    at Session.emit (node:events:508:28)
+Error occurred in handler for 'save-note': Error: No handler registered for 'save-note'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:116772)
+    at Session.emit (node:events:508:28)
