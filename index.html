@@ -4,39 +4,209 @@
      <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quick Note Taker</title>
-    <style>
+   <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: system-ui;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
             padding: 20px;
-            background: #f4f4f4;
+            background-color: #2d1818;
+            min-height: 100vh;
         }
+
+        #app {
+            display: flex;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            height: calc(100vh - 40px);
+        }
+
+        #sidebar {
+            width: 280px;
+            background-color: #3d2a2a;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        #editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            background-color: #2a2a2a;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            gap: 15px;
+        }
+
         textarea {
-            width: 95%;
-            height: 60vh;
-            font-size: 18px;
+            width: 100%;
+            flex: 1;
+            font-size: 16px;
             padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #5a3a3a;
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+            resize: vertical;
+            font-family: monospace;
         }
+
+        textarea:focus,
+        input:focus {
+            outline: none;
+            border-color: #7c3aed;
+        }
+
+        input {
+            width: 100%;
+            font-size: 20px;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid #5a3a3a;
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+            font-weight: 600;
+        }
+
         button {
-            padding: 12px 30px;
-            font-size: 18px;
-            background: #316357;
-            color: white;
-            border: none;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            background-color: #3d2a2a;
+            color: #e0e0e0;
+            border: 1px solid #5a3a3a;
             cursor: pointer;
-            border-radius: 5px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #4a3535;
+            transform: translateY(-1px);
+            border-color: #7c3aed;
+        }
+
+        #new-note {
+            background-color: #7c3aed;
+            border-color: #8b5cf6;
+            color: white;
+        }
+
+        #new-note:hover {
+            background-color: #8b5cf6;
+        }
+
+        #toolbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        #save-status {
+            font-size: 12px;
+            color: #6b8c42;
+            margin-top: 5px;
+        }
+
+        .note-item {
+            background-color: #2a1f1f;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            position: relative;
+        }
+
+        .note-item:hover {
+            background-color: #3d2a2a;
+            transform: translateX(5px);
+        }
+
+        .note-item.active {
+            border-left-color: #7c3aed;
+            background-color: #3d2a2a;
+        }
+
+        .note-title {
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-bottom: 5px;
+            word-break: break-word;
+            padding-right: 25px;
+        }
+
+        .note-preview {
+            font-size: 12px;
+            color: #999;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .delete-note {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0 5px;
+            position: absolute;
+            top: 8px;
+            right: 8px;
+        }
+
+        .delete-note:hover {
+            color: #ff6b6b;
+            background: none;
+            transform: none;
+        }
+
+        #notes-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        h3 {
+            color: #e0e0e0;
+            font-size: 14px;
+            margin-bottom: 5px;
         }
     </style>
 </head>
 
 <body>
-    <h1>📝My Notes in class</h1>
-    <textarea id="note" placeholder="Start typing your note..."></textarea>
-    <br><br>        
-    <button id="save">💾Save Note 🎬</button>
-    <button id="save-as">💾Save As</button>
-    <button id="new-note">🆕New Note</button>
-    <button id="open-file">📂Open Note</button>
-    <p id="save_status"></p>
+    <div id="app">
+        <div id="sidebar">
+            <button id="new-note">+ New Note</button>
+            <h3>📝 Your Notes</h3>
+            <div id="notes-list"></div>
+        </div>
+
+        <div id="editor">
+            <input type="text" id="note-title" placeholder="Note Title...">
+            <textarea id="note-content" placeholder="Start writing your note here..."></textarea>
+            <div id="toolbar">
+                <button id="save-note">💾 Save Note</button>
+                <button id="open-file">📂 Open File</button>
+                <button id="save-as">📎 Save As</button>
+            </div>
+            <p id="save-status"></p>
+        </div>
+    </div>
 
     <script src="renderer.js"></script>
 </body>
