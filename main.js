@@ -42,19 +42,6 @@ function writeNotes(notes) {
     fs.writeFileSync(notesFilePath, JSON.stringify(notes, null, 2), 'utf-8');
 }
 
-function createTrayIcon() {
-    const iconPath = path.join(app.getPath('userData'), 'tray-icon.png');
-
-    if (!fs.existsSync(iconPath)) {
-        const base64Icon =
-            'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAIklEQVR42mNk+M9Qz0AEYBxVSFUBCjEwMDAw+P//PwMAbc4DH0xH7wAAAABJRU5ErkJggg==';
-
-        fs.writeFileSync(iconPath, Buffer.from(base64Icon, 'base64'));
-    }
-
-    return iconPath;
-}
-
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1000,
@@ -69,7 +56,6 @@ function createWindow() {
 
     mainWindow.loadFile('index.html');
 
-   
     mainWindow.on('close', (event) => {
         if (!isQuiting) {
             event.preventDefault();
@@ -77,7 +63,6 @@ function createWindow() {
         }
     });
 }
-
 
 function createAppMenu() {
     const menuTemplate = [
@@ -138,26 +123,47 @@ function createAppMenu() {
 }
 
 function createTray() {
-    const iconPath = createTrayIcon();
-    const icon = nativeImage.createFromPath(iconPath);
+    // Your icon location:
+    // quick-note-taker/assets/note taker icon.png
+    const iconPath = path.join(__dirname, 'assets', 'image.png');
+
+    console.log('Tray icon path:', iconPath);
+    console.log('Icon exists:', fs.existsSync(iconPath));
+
+    let icon = nativeImage.createFromPath(iconPath);
+
+    if (icon.isEmpty()) {
+        console.log('ERROR: Tray icon is empty. Check file name and location.');
+        return;
+    }
+
+    icon = icon.resize({
+        width: 16,
+        height: 16
+    });
 
     tray = new Tray(icon);
     tray.setToolTip('Quick Note Taker');
 
     const trayMenu = Menu.buildFromTemplate([
         {
-            label: 'Show / Hide Quick Note Taker',
+            label: 'Show Quick Note Taker',
             click: () => {
                 if (!mainWindow) return;
 
-                if (mainWindow.isVisible()) {
-                    mainWindow.hide();
-                } else {
-                    mainWindow.show();
-                    mainWindow.focus();
-                }
+                mainWindow.show();
+                mainWindow.focus();
             }
         },
+        {
+            label: 'Hide Quick Note Taker',
+            click: () => {
+                if (!mainWindow) return;
+
+                mainWindow.hide();
+            }
+        },
+        { type: 'separator' },
         {
             label: 'Quit',
             click: () => {
@@ -181,7 +187,6 @@ function createTray() {
     });
 }
 
-// App ready
 app.whenReady().then(() => {
     createWindow();
     createAppMenu();
@@ -196,16 +201,18 @@ app.whenReady().then(() => {
     });
 });
 
+app.on('before-quit', () => {
+    isQuiting = true;
+});
 
 app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-    }
+    // Keep app running because tray icon should stay active.
+    // User can quit from File > Quit or tray > Quit.
 });
 
 // -------------------------------
 // IPC HANDLERS
 // -------------------------------
-
 
 ipcMain.handle('save-note', async (event, text) => {
     const filePath = getQuickNotePath();
@@ -216,7 +223,6 @@ ipcMain.handle('save-note', async (event, text) => {
         filePath: filePath
     };
 });
-
 
 ipcMain.handle('load-note', async () => {
     const filePath = getQuickNotePath();
